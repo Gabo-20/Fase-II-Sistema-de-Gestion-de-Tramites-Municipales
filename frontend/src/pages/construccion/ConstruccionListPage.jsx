@@ -56,12 +56,14 @@ export default function ConstruccionListPage() {
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className={SELECT}>
             {ESTADOS.map(e => <option key={e} value={e}>{LABEL_ESTADO[e]}</option>)}
           </select>
-          <Link
-            to="/construccion/nuevo"
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-          >
-            <Plus size={16} /> Nuevo permiso
-          </Link>
+          {hasRole('CIUDADANO') && (
+            <Link
+              to="/construccion/nuevo"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              <Plus size={16} /> Nuevo permiso
+            </Link>
+          )}
         </div>
       </div>
 

@@ -57,12 +57,14 @@ export default function LicenciasListPage() {
           <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className={SELECT}>
             {ESTADOS.map(e => <option key={e} value={e}>{LABEL_ESTADO[e]}</option>)}
           </select>
-          <Link
-            to="/licencias/nueva"
-            className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          >
-            <Plus size={16} /> Nueva solicitud
-          </Link>
+          {hasRole('CIUDADANO') && (
+            <Link
+              to="/licencias/nueva"
+              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              <Plus size={16} /> Nueva solicitud
+            </Link>
+          )}
         </div>
       </div>
 
