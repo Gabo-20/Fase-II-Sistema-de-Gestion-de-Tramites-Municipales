@@ -59,17 +59,13 @@ describe('POST /api/tramites', () => {
     expect(res.body.solicitud.estado).toBe('RECIBIDA');
   });
 
-  test('201 — OPERADOR también puede crear solicitud', async () => {
-    prisma.tipoTramite.findUnique.mockResolvedValue({ id: 1, nombre: 'Licencia Comercial', activo: true });
-    prisma.solicitud.create.mockResolvedValue({ ...solicitudMock, ciudadanoId: 'operador-uuid' });
-    prisma.historialEstado.create.mockResolvedValue({});
-
+  test('403 — OPERADOR no puede crear solicitud', async () => {
     const res = await request(app)
       .post('/api/tramites')
       .set('Authorization', `Bearer ${tokenOperador()}`)
       .send({ tipoTramiteId: 1 });
 
-    expect(res.status).toBe(201);
+    expect(res.status).toBe(403);
   });
 
   test('401 — sin token', async () => {
