@@ -13,9 +13,9 @@ const router = Router();
 
 router.use(verificarToken);
 
-// Cualquier usuario autenticado puede crear y renovar
-router.post('/',            crearSolicitud);
-router.post('/:id/renovar', renovarLicencia);
+// Solo ciudadanos pueden crear y renovar solicitudes
+router.post('/',            soloRoles('CIUDADANO'), crearSolicitud);
+router.post('/:id/renovar', soloRoles('CIUDADANO'), renovarLicencia);
 
 // Todos los autenticados
 router.get('/',                                                         listarSolicitudes);
