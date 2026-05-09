@@ -62,38 +62,45 @@ const router = createBrowserRouter([
           { path: '/dashboard', element: <DashboardPage /> },
 
           { path: '/licencias', element: <LicenciasListPage /> },
-          { path: '/licencias/nueva', element: <NuevaLicenciaPage /> },
           { path: '/licencias/:id', element: <LicenciaDetallePage /> },
 
           { path: '/construccion', element: <ConstruccionListPage /> },
-          { path: '/construccion/nuevo', element: <NuevoPermisoConstruccionPage /> },
           { path: '/construccion/:id', element: <PermisoConstruccionDetallePage /> },
 
           { path: '/impuestos', element: <ImpuestosListPage /> },
-          { path: '/impuestos/nuevo', element: <NuevoImpuestoPage /> },
           { path: '/impuestos/:id', element: <ImpuestoDetallePage /> },
 
           { path: '/solvencia', element: <SolvenciaListPage /> },
-          { path: '/solvencia/nueva', element: <NuevaSolvenciaPage /> },
           { path: '/solvencia/:id', element: <SolvenciaDetallePage /> },
 
           { path: '/multas', element: <MultasListPage /> },
-          { path: '/multas/nuevo', element: <NuevaMultaPage /> },
           { path: '/multas/:id', element: <MultaDetallePage /> },
 
           { path: '/residencia', element: <ResidenciaListPage /> },
-          { path: '/residencia/nueva', element: <NuevaResidenciaPage /> },
           { path: '/residencia/:id', element: <ResidenciaDetallePage /> },
 
           { path: '/rotulo', element: <RotuloListPage /> },
-          { path: '/rotulo/nuevo', element: <NuevoRotuloPage /> },
           { path: '/rotulo/:id', element: <RotuloDetallePage /> },
 
           { path: '/licencias-temporales', element: <LicenciasTemporalesListPage /> },
-          { path: '/licencias-temporales/nueva', element: <NuevaLicenciaTemporalPage /> },
           { path: '/licencias-temporales/:id', element: <LicenciaTemporalDetallePage /> },
 
           { path: '/notificaciones', element: <NotificacionesPage /> },
+
+          // Solo ciudadanos pueden crear nuevas solicitudes
+          {
+            element: <ProtectedRoute roles={['CIUDADANO']} />,
+            children: [
+              { path: '/licencias/nueva', element: <NuevaLicenciaPage /> },
+              { path: '/construccion/nuevo', element: <NuevoPermisoConstruccionPage /> },
+              { path: '/impuestos/nuevo', element: <NuevoImpuestoPage /> },
+              { path: '/solvencia/nueva', element: <NuevaSolvenciaPage /> },
+              { path: '/multas/nuevo', element: <NuevaMultaPage /> },
+              { path: '/residencia/nueva', element: <NuevaResidenciaPage /> },
+              { path: '/rotulo/nuevo', element: <NuevoRotuloPage /> },
+              { path: '/licencias-temporales/nueva', element: <NuevaLicenciaTemporalPage /> },
+            ],
+          },
 
           // Operador+
           {
