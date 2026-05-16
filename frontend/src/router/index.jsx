@@ -40,6 +40,7 @@ import NuevaLicenciaTemporalPage from '../pages/licencias-temporales/NuevaLicenc
 import LicenciaTemporalDetallePage from '../pages/licencias-temporales/LicenciaTemporalDetallePage'
 
 import CatastroPage from '../pages/catastro/CatastroPage'
+import CatastroDetallePage from '../pages/catastro/CatastroDetallePage'
 import NotificacionesPage from '../pages/notificaciones/NotificacionesPage'
 import UsuariosPage from '../pages/admin/UsuariosPage'
 
@@ -107,6 +108,7 @@ const router = createBrowserRouter([
             element: <ProtectedRoute roles={['OPERADOR', 'SUPERVISOR', 'ADMIN']} />,
             children: [
               { path: '/catastro', element: <CatastroPage /> },
+              { path: '/catastro/:id', element: <CatastroDetallePage /> },
             ],
           },
 
