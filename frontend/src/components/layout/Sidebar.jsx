@@ -15,6 +15,8 @@ import {
   Home,
   Tag,
   CalendarClock,
+  BarChart2,
+  History,
 } from 'lucide-react'
 
 const NAV = [
@@ -28,6 +30,8 @@ const NAV = [
   { to: '/rotulo',               label: 'Rótulos',             Icon: Tag,             roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
   { to: '/licencias-temporales', label: 'Lic. Temporales',     Icon: CalendarClock,   roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
   { to: '/catastro',             label: 'Catastro',            Icon: Map,             roles: ['OPERADOR', 'SUPERVISOR', 'ADMIN'] },
+  { to: '/reportes',             label: 'Reportes',            Icon: BarChart2,       roles: ['OPERADOR', 'SUPERVISOR', 'ADMIN'] },
+  { to: '/historial',            label: 'Mis solicitudes',     Icon: History,         roles: ['CIUDADANO'] },
   { to: '/notificaciones',       label: 'Notificaciones',      Icon: Bell,            roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
   { to: '/admin/usuarios',       label: 'Usuarios',            Icon: Users,           roles: ['ADMIN'] },
 ]

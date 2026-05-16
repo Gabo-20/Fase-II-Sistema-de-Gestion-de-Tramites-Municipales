@@ -41,6 +41,8 @@ import LicenciaTemporalDetallePage from '../pages/licencias-temporales/LicenciaT
 
 import CatastroPage from '../pages/catastro/CatastroPage'
 import CatastroDetallePage from '../pages/catastro/CatastroDetallePage'
+import ReportesPage from '../pages/reportes/ReportesPage'
+import HistorialPage from '../pages/historial/HistorialPage'
 import NotificacionesPage from '../pages/notificaciones/NotificacionesPage'
 import UsuariosPage from '../pages/admin/UsuariosPage'
 
@@ -88,6 +90,14 @@ const router = createBrowserRouter([
 
           { path: '/notificaciones', element: <NotificacionesPage /> },
 
+          // Solo ciudadanos
+          {
+            element: <ProtectedRoute roles={['CIUDADANO']} />,
+            children: [
+              { path: '/historial', element: <HistorialPage /> },
+            ],
+          },
+
           // Solo ciudadanos pueden crear nuevas solicitudes
           {
             element: <ProtectedRoute roles={['CIUDADANO']} />,
@@ -109,6 +119,7 @@ const router = createBrowserRouter([
             children: [
               { path: '/catastro', element: <CatastroPage /> },
               { path: '/catastro/:id', element: <CatastroDetallePage /> },
+              { path: '/reportes', element: <ReportesPage /> },
             ],
           },
 

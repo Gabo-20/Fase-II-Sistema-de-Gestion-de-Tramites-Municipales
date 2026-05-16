@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { catastroService } from '../../services/catastroService'
+import api from '../../services/api'
 import Spinner from '../../components/ui/Spinner'
-import { ArrowLeft, Map, User, Clock, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Map, User, Clock, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react'
 
 const INPUT = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500'
 
@@ -24,6 +25,9 @@ export default function CatastroDetallePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [exito, setExito] = useState('')
+  const [modo, setModo] = useState('manual') // 'manual' | 'sistema'
+  const [usuarios, setUsuarios] = useState([])
+  const [loadingUsuarios, setLoadingUsuarios] = useState(false)
 
   const cargar = () => {
     catastroService.getInmuebleById(id)
@@ -33,6 +37,21 @@ export default function CatastroDetallePage() {
   }
 
   useEffect(() => { cargar() }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const cargarUsuarios = () => {
+    if (usuarios.length > 0) return
+    setLoadingUsuarios(true)
+    api.get('/usuarios')
+      .then(({ data }) => setUsuarios(data.usuarios ?? data))
+      .catch(() => {})
+      .finally(() => setLoadingUsuarios(false))
+  }
+
+  const handleModoChange = (nuevoModo) => {
+    setModo(nuevoModo)
+    setForm({ propietarioNuevo: '', motivo: '' })
+    if (nuevoModo === 'sistema') cargarUsuarios()
+  }
 
   const handleActualizar = async (e) => {
     e.preventDefault()
@@ -126,20 +145,61 @@ export default function CatastroDetallePage() {
 
           {/* Formulario actualizar propietario */}
           <form onSubmit={handleActualizar} className="space-y-4 border-t border-gray-100 pt-5 dark:border-gray-800">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">
-              <User size={14} /> Actualizar propietario
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <User size={14} /> Actualizar propietario
+              </h2>
+              <div className="flex rounded-lg border border-gray-200 bg-gray-50 p-0.5 dark:border-gray-700 dark:bg-gray-800">
+                <button
+                  type="button"
+                  onClick={() => handleModoChange('manual')}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${modo === 'manual' ? 'bg-white shadow-sm text-gray-800 dark:bg-gray-700 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                >
+                  Manual
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModoChange('sistema')}
+                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${modo === 'sistema' ? 'bg-white shadow-sm text-gray-800 dark:bg-gray-700 dark:text-white' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                >
+                  Del sistema
+                </button>
+              </div>
+            </div>
 
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo propietario</label>
-              <input
-                type="text"
-                value={form.propietarioNuevo}
-                onChange={(e) => setForm({ ...form, propietarioNuevo: e.target.value })}
-                required
-                className={INPUT}
-                placeholder="Nombre completo del nuevo propietario"
-              />
+              {modo === 'manual' ? (
+                <input
+                  type="text"
+                  value={form.propietarioNuevo}
+                  onChange={(e) => setForm({ ...form, propietarioNuevo: e.target.value })}
+                  required
+                  className={INPUT}
+                  placeholder="Nombre completo del nuevo propietario"
+                />
+              ) : (
+                <div className="relative">
+                  {loadingUsuarios ? (
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-800">
+                      <Spinner size="sm" className="text-gray-400" />
+                      <span className="text-sm text-gray-400">Cargando usuarios...</span>
+                    </div>
+                  ) : (
+                    <select
+                      value={form.propietarioNuevo}
+                      onChange={(e) => setForm({ ...form, propietarioNuevo: e.target.value })}
+                      required
+                      className={INPUT}
+                    >
+                      <option value="">Seleccionar usuario del sistema...</option>
+                      {usuarios.map((u) => (
+                        <option key={u.id} value={u.nombre}>{u.nombre} — {u.correo}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
