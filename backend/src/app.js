@@ -19,5 +19,6 @@ app.use('/api/notificaciones', require('./routes/notificaciones'));
 app.use('/api/usuarios',       require('./routes/usuarios'));
 app.use('/api/dashboard',      require('./routes/dashboard'));
 app.use('/api/catastro',       require('./routes/catastro'));
+app.use('/api/reportes',       require('./routes/reportes'));
 
 module.exports = app;
