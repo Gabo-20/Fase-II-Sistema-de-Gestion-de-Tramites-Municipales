@@ -8,7 +8,7 @@ function generarExpediente() {
   return `EXP-${anio}-${random}`;
 }
 
-async function crearSolicitud({ ciudadanoId, tipoTramiteId }) {
+async function crearSolicitud({ ciudadanoId, tipoTramiteId, referencia }) {
   if (!tipoTramiteId) {
     throw Object.assign(new Error('tipoTramiteId es requerido'), { status: 400 });
   }
@@ -23,6 +23,7 @@ async function crearSolicitud({ ciudadanoId, tipoTramiteId }) {
       numeroExpediente: generarExpediente(),
       ciudadanoId,
       tipoTramiteId: Number(tipoTramiteId),
+      referencia: referencia ?? null,
       estado: 'RECIBIDA',
     },
     include: {

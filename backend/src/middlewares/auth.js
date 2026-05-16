@@ -2,11 +2,14 @@ const jwt = require('jsonwebtoken');
 
 function verificarToken(req, res, next) {
   const header = req.headers.authorization;
-  if (!header || !header.startsWith('Bearer ')) {
+  // Permite token como query param para descargas (window.open no puede enviar headers)
+  const queryToken = req.query.token;
+
+  if (!header && !queryToken) {
     return res.status(401).json({ error: 'Token requerido' });
   }
 
-  const token = header.slice(7);
+  const token = header ? header.slice(7) : queryToken;
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     req.usuario = { id: payload.sub, rol: payload.rol };

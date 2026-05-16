@@ -5,6 +5,7 @@ async function crearSolicitud(req, res) {
     const solicitud = await tramiteService.crearSolicitud({
       ciudadanoId: req.usuario.id,
       tipoTramiteId: req.body.tipoTramiteId,
+      referencia: req.body.referencia,
     });
     res.status(201).json({ message: 'Solicitud creada', solicitud });
   } catch (err) {

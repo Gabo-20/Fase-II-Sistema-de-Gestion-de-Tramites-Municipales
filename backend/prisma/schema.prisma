@@ -43,6 +43,7 @@ model Solicitud {
   ciudadanoId      String
   tipoTramiteId    Int
   funcionarioId    String?
+  referencia       String?         @db.VarChar(255)
   estado           EstadoSolicitud @default(RECIBIDA)
   fechaSolicitud   DateTime        @default(now())
   fechaResolucion  DateTime?
