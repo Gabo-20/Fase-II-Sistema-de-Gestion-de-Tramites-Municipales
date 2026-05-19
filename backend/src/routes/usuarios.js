@@ -4,6 +4,20 @@ const { verificarToken, soloRoles } = require('../middlewares/auth');
 
 const prisma = new PrismaClient();
 
+// GET /api/usuarios/ciudadanos — lista ciudadanos (OPERADOR+)
+router.get('/ciudadanos', verificarToken, soloRoles('OPERADOR', 'SUPERVISOR', 'ADMIN'), async (req, res) => {
+  try {
+    const ciudadanos = await prisma.usuario.findMany({
+      where: { rol: 'CIUDADANO', activo: true },
+      select: { id: true, nombre: true, correo: true, dpi: true },
+      orderBy: { nombre: 'asc' },
+    });
+    res.json(ciudadanos);
+  } catch {
+    res.status(500).json({ error: 'Error al obtener ciudadanos' });
+  }
+});
+
 // GET /api/usuarios — lista todos los usuarios (ADMIN)
 router.get('/', verificarToken, soloRoles('ADMIN'), async (req, res) => {
   try {

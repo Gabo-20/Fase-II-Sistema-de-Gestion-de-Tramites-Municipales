@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { reportesService } from '../../services/reportesService'
 import Spinner from '../../components/ui/Spinner'
-import { Search, Download, FileBarChart, AlertCircle, CheckCircle, Clock, XCircle, Inbox } from 'lucide-react'
+import ReportePDFView from '../../components/reportes/ReportePDFView'
+import { Search, Download, FileBarChart, AlertCircle, CheckCircle, Clock, XCircle, Inbox, FileText } from 'lucide-react'
 
 const INPUT = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500'
 const LABEL = 'mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400'
@@ -29,6 +30,54 @@ function StatCard({ label, value, color }) {
   )
 }
 
+function getPDFAvoidRanges(root, canvas) {
+  const rootRect = root.getBoundingClientRect()
+  const scale = canvas.width / rootRect.width
+
+  return Array.from(root.querySelectorAll('table tr, [data-pdf-avoid-break]'))
+    .map(element => {
+      const rect = element.getBoundingClientRect()
+      return {
+        top: Math.floor((rect.top - rootRect.top) * scale),
+        bottom: Math.ceil((rect.bottom - rootRect.top) * scale),
+      }
+    })
+    .filter(range => range.bottom > range.top)
+}
+
+function findSafePDFPageEnd(startY, naturalEnd, avoidRanges) {
+  const crossing = avoidRanges.find(range =>
+    range.top < naturalEnd &&
+    range.bottom > naturalEnd &&
+    range.top > startY + 24
+  )
+
+  return crossing ? crossing.top : naturalEnd
+}
+
+function createPDFPageCanvas(sourceCanvas, startY, segmentHeight, pageHeight) {
+  const pageCanvas = document.createElement('canvas')
+  pageCanvas.width = sourceCanvas.width
+  pageCanvas.height = pageHeight
+
+  const ctx = pageCanvas.getContext('2d')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height)
+  ctx.drawImage(
+    sourceCanvas,
+    0,
+    startY,
+    sourceCanvas.width,
+    segmentHeight,
+    0,
+    0,
+    sourceCanvas.width,
+    segmentHeight
+  )
+
+  return pageCanvas
+}
+
 export default function ReportesPage() {
   const today = new Date().toISOString().slice(0, 10)
   const firstOfMonth = today.slice(0, 7) + '-01'
@@ -37,7 +86,9 @@ export default function ReportesPage() {
   const [tiposTramite, setTiposTramite] = useState([])
   const [resultado, setResultado] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [loadingPDF, setLoadingPDF] = useState(false)
   const [error, setError] = useState('')
+  const pdfRef = useRef(null)
 
   useEffect(() => {
     reportesService.getTiposTramite()
@@ -65,6 +116,48 @@ export default function ReportesPage() {
   const exportar = () => {
     const params = Object.fromEntries(Object.entries(filtros).filter(([, v]) => v))
     window.open(reportesService.exportUrl(params), '_blank')
+  }
+
+  const generarPDF = async () => {
+    const pdfRoot = pdfRef.current
+    if (!pdfRoot) return
+    setLoadingPDF(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const jsPDF = (await import('jspdf')).default
+      const canvas = await html2canvas(pdfRoot, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        onclone: (doc) => {
+          doc.querySelectorAll('style, link[rel="stylesheet"]').forEach(el => el.remove())
+        },
+      })
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+      const pageHeightPx = Math.floor(canvas.width * (pageH / pageW))
+      const avoidRanges = getPDFAvoidRanges(pdfRoot, canvas)
+
+      let y = 0
+      let page = 0
+      while (y < canvas.height - 1) {
+        const naturalEnd = Math.min(y + pageHeightPx, canvas.height)
+        const safeEnd = findSafePDFPageEnd(y, naturalEnd, avoidRanges)
+        const segmentHeight = Math.max(1, Math.min(safeEnd - y, pageHeightPx))
+        const pageCanvas = createPDFPageCanvas(canvas, y, segmentHeight, pageHeightPx)
+
+        if (page > 0) pdf.addPage()
+        pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pageW, pageH)
+
+        y += segmentHeight
+        page += 1
+      }
+      pdf.save(`reporte-tramites-${new Date().toISOString().slice(0, 10)}.pdf`)
+    } finally {
+      setLoadingPDF(false)
+    }
   }
 
   const solicitudes = resultado?.solicitudes ?? []
@@ -124,13 +217,23 @@ export default function ReportesPage() {
           </button>
 
           {resultado && (
-            <button
-              type="button"
-              onClick={exportar}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-            >
-              <Download size={15} /> Exportar CSV
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={exportar}
+                className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                <Download size={15} /> Exportar CSV
+              </button>
+              <button
+                type="button"
+                onClick={generarPDF}
+                disabled={loadingPDF}
+                className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {loadingPDF ? <><Spinner size="sm" className="text-white" /><span>Generando PDF...</span></> : <><FileText size={15} /><span>Exportar PDF</span></>}
+              </button>
+            </>
           )}
         </div>
       </form>
@@ -209,6 +312,13 @@ export default function ReportesPage() {
           )}
         </div>
       )}
+
+      {/* Contenedor oculto para generación del PDF */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1 }}>
+        <div ref={pdfRef}>
+          <ReportePDFView solicitudes={solicitudes} filtros={filtros} />
+        </div>
+      </div>
     </div>
   )
 }

@@ -23,7 +23,8 @@ export default function NuevoTramitePage({ titulo, keywords, backPath, detallePa
         const filtrados = data.filter(t =>
           keywords.some(k => norm(t.nombre).includes(norm(k)))
         )
-        setTipos(filtrados)
+        const unicos = Array.from(new Map(filtrados.map(t => [norm(t.nombre), t])).values())
+        setTipos(unicos)
         if (filtrados.length === 1) setTipoTramiteId(String(filtrados[0].id))
       })
       .catch(() => setError('No se pudieron cargar los tipos de trámite'))

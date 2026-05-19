@@ -10,6 +10,17 @@ const ESTADOS = ['', 'RECIBIDA', 'EN_REVISION', 'APROBADA', 'RECHAZADA', 'SUBSAN
 const LABEL_ESTADO = { '': 'Todos', RECIBIDA: 'Recibida', EN_REVISION: 'En revisión', APROBADA: 'Aprobada', RECHAZADA: 'Rechazada', SUBSANACION: 'Subsanación' }
 const SELECT = 'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white'
 
+const BTN_COLOR = {
+  blue:    'bg-blue-600 hover:bg-blue-700',
+  emerald: 'bg-emerald-600 hover:bg-emerald-700',
+  teal:    'bg-teal-600 hover:bg-teal-700',
+  orange:  'bg-orange-600 hover:bg-orange-700',
+  red:     'bg-red-600 hover:bg-red-700',
+  pink:    'bg-pink-600 hover:bg-pink-700',
+  violet:  'bg-violet-600 hover:bg-violet-700',
+  indigo:  'bg-indigo-600 hover:bg-indigo-700',
+}
+
 export default function ModuloListPage({ titulo, keywords, nuevoPath, nuevoPathAdmin, labelAdmin, detallePath, accentColor = 'blue', IconoVacio }) {
   const { hasRole } = useAuth()
   const esFuncionario = hasRole('OPERADOR', 'SUPERVISOR', 'ADMIN')
@@ -53,12 +64,12 @@ export default function ModuloListPage({ titulo, keywords, nuevoPath, nuevoPathA
             {ESTADOS.map(e => <option key={e} value={e}>{LABEL_ESTADO[e]}</option>)}
           </select>
           {hasRole('CIUDADANO') && nuevoPath && (
-            <Link to={nuevoPath} className={`flex items-center gap-1.5 rounded-lg bg-${accentColor}-600 px-4 py-2 text-sm font-semibold text-white hover:bg-${accentColor}-700`}>
+            <Link to={nuevoPath} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white ${BTN_COLOR[accentColor] ?? BTN_COLOR.blue}`}>
               <Plus size={16} /> Nueva solicitud
             </Link>
           )}
           {esFuncionario && nuevoPathAdmin && (
-            <Link to={nuevoPathAdmin} className={`flex items-center gap-1.5 rounded-lg bg-${accentColor}-600 px-4 py-2 text-sm font-semibold text-white hover:bg-${accentColor}-700`}>
+            <Link to={nuevoPathAdmin} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white ${BTN_COLOR[accentColor] ?? BTN_COLOR.blue}`}>
               <Plus size={16} /> {labelAdmin ?? 'Nuevo'}
             </Link>
           )}
