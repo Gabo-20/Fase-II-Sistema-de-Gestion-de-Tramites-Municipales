@@ -9,6 +9,8 @@ export default function MultasListPage() {
       titulo="Pago de Multas"
       keywords={KEYWORDS}
       nuevoPath="/multas/nuevo"
+      nuevoPathAdmin="/multas/nueva-admin"
+      labelAdmin="Registrar multa"
       detallePath="/multas"
       accentColor="red"
       IconoVacio={AlertTriangle}

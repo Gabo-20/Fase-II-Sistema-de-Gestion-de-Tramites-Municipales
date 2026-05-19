@@ -7,6 +7,8 @@ export default function NuevaSolvenciaPage() {
       keywords={['solvencia']}
       backPath="/solvencia"
       detallePath="/solvencia"
+      refLabel="Motivo de la solicitud"
+      refPlaceholder="Ej. Trámite bancario, venta de inmueble..."
     />
   )
 }

@@ -75,6 +75,19 @@ async function renovarLicencia(req, res) {
   }
 }
 
+async function crearMultaParaCiudadano(req, res) {
+  try {
+    const solicitud = await tramiteService.crearMultaParaCiudadano({
+      funcionarioId: req.usuario.id,
+      ciudadanoDpi: req.body.ciudadanoDpi,
+      referencia: req.body.referencia,
+    });
+    res.status(201).json({ message: 'Multa registrada', solicitud });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   crearSolicitud,
   listarSolicitudes,
@@ -82,4 +95,5 @@ module.exports = {
   resolverSolicitud,
   agregarObservacion,
   renovarLicencia,
+  crearMultaParaCiudadano,
 };

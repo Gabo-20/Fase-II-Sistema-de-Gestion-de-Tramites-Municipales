@@ -25,6 +25,7 @@ import SolvenciaDetallePage from '../pages/solvencia/SolvenciaDetallePage'
 
 import MultasListPage from '../pages/multas/MultasListPage'
 import NuevaMultaPage from '../pages/multas/NuevaMultaPage'
+import NuevaMultaAdminPage from '../pages/multas/NuevaMultaAdminPage'
 import MultaDetallePage from '../pages/multas/MultaDetallePage'
 
 import ResidenciaListPage from '../pages/residencia/ResidenciaListPage'
@@ -120,6 +121,7 @@ const router = createBrowserRouter([
               { path: '/catastro', element: <CatastroPage /> },
               { path: '/catastro/:id', element: <CatastroDetallePage /> },
               { path: '/reportes', element: <ReportesPage /> },
+              { path: '/multas/nueva-admin', element: <NuevaMultaAdminPage /> },
             ],
           },
 
