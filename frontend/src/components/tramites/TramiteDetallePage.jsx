@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { tramitesService } from '../../services/tramitesService'
 import { useAuth } from '../../context/AuthContext'
+import { useBadges } from '../../context/BadgeContext'
 import EstadoBadge from '../ui/EstadoBadge'
 import Spinner from '../ui/Spinner'
 import { ArrowLeft, Clock, User, FileText, CreditCard } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function TramiteDetallePage({ backPath, backLabel = 'Volver al li
   const { id } = useParams()
   const navigate = useNavigate()
   const { hasRole, user } = useAuth()
+  const { refetch: refetchBadges } = useBadges()
   const [solicitud, setSolicitud] = useState(null)
   const [loading, setLoading] = useState(true)
   const [resolucion, setResolucion] = useState({ accion: '', comentario: '' })
@@ -34,6 +36,7 @@ export default function TramiteDetallePage({ backPath, backLabel = 'Volver al li
       const { data } = await tramitesService.getSolicitudById(id)
       setSolicitud(data)
       setResolucion({ accion: '', comentario: '' })
+      refetchBadges()
     } finally {
       setSaving(false)
     }
@@ -63,6 +66,7 @@ export default function TramiteDetallePage({ backPath, backLabel = 'Volver al li
       await tramitesService.registrarPago(id)
       const { data } = await tramitesService.getSolicitudById(id)
       setSolicitud(data)
+      refetchBadges()
     } catch (err) {
       setErrorPago(err.response?.data?.error ?? 'No se pudo registrar el pago')
     } finally {

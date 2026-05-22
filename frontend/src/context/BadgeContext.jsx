@@ -13,7 +13,11 @@ export function BadgeProvider({ children }) {
   const refetch = useCallback(async () => {
     if (!isAuthenticated) return
     try {
-      const { data } = await api.get('/notificaciones/badges')
+      const desde = localStorage.getItem('notif_seen_at') ?? ''
+      const url = desde
+        ? `/notificaciones/badges?desde=${encodeURIComponent(desde)}`
+        : '/notificaciones/badges'
+      const { data } = await api.get(url)
       setBadges(data)
     } catch {}
   }, [isAuthenticated])
