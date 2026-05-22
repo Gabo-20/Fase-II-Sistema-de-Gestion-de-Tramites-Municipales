@@ -38,14 +38,14 @@ router.get('/', verificarToken, async (req, res) => {
 const norm = s => (s ?? '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
 
 const MODULO_KEYWORDS = {
+  rotulo:       ['rotulo', 'rotulos', 'publicidad'],
+  temporales:   ['temporal', 'licencia temporal'],
   licencias:    ['licencia comercial', 'licencia nueva', 'renovacion', 'licencia'],
   construccion: ['construccion', 'permiso de construccion', 'ampliacion', 'remodelacion', 'obra'],
   iusi:         ['iusi', 'impuesto unico', 'impuesto'],
   solvencia:    ['solvencia'],
   multas:       ['multa'],
   residencia:   ['residencia', 'constancia de residencia'],
-  rotulo:       ['rotulo', 'rotulos', 'publicidad'],
-  temporales:   ['temporal', 'licencia temporal'],
 }
 
 function clasificarModulo(nombreTipo) {
