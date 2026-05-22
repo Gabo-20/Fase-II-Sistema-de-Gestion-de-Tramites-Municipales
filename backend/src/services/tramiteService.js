@@ -200,6 +200,47 @@ async function renovarLicencia({ solicitudId, ciudadanoId }) {
   return nueva;
 }
 
+// CIUDADANO registra el pago de una multa asignada a él
+async function registrarPagoMulta({ id, ciudadanoId }) {
+  const solicitud = await prisma.solicitud.findUnique({
+    where: { id },
+    include: { tipoTramite: true },
+  });
+
+  if (!solicitud) {
+    throw Object.assign(new Error('Solicitud no encontrada'), { status: 404 });
+  }
+  if (solicitud.ciudadanoId !== ciudadanoId) {
+    throw Object.assign(new Error('Sin permisos para esta solicitud'), { status: 403 });
+  }
+  if (!solicitud.tipoTramite.nombre.toLowerCase().includes('multa')) {
+    throw Object.assign(new Error('Esta solicitud no es una multa'), { status: 400 });
+  }
+  if (solicitud.estado !== 'RECIBIDA') {
+    throw Object.assign(new Error('Solo se puede registrar pago en multas con estado RECIBIDA'), { status: 400 });
+  }
+
+  const [actualizada] = await prisma.$transaction([
+    prisma.solicitud.update({
+      where: { id },
+      data: { estado: 'EN_REVISION' },
+      include: {
+        tipoTramite: { select: { nombre: true } },
+        ciudadano: { select: { nombre: true, correo: true } },
+      },
+    }),
+    prisma.historialEstado.create({
+      data: {
+        solicitudId: id,
+        estado: 'EN_REVISION',
+        comentario: 'Pago registrado por el ciudadano. Pendiente de confirmación.',
+      },
+    }),
+  ]);
+
+  return actualizada;
+}
+
 // OPERADOR+ asigna una multa a un ciudadano buscándolo por DPI
 async function crearMultaParaCiudadano({ funcionarioId, ciudadanoDpi, referencia }) {
   if (!ciudadanoDpi?.trim()) {
@@ -253,4 +294,5 @@ module.exports = {
   agregarObservacion,
   renovarLicencia,
   crearMultaParaCiudadano,
+  registrarPagoMulta,
 };

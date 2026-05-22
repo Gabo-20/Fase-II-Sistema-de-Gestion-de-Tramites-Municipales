@@ -17,6 +17,8 @@ export const tramitesService = {
   getEstadoPermiso: (id) => api.get(`/tramites/${id}`),
   agregarObservacion: (id, data) => api.post(`/tramites/${id}/observaciones`, data),
 
+  registrarPago: (id) => api.post(`/tramites/${id}/pago`),
+
   getSolicitudesPendientes: () => api.get('/tramites/'),
 
   // ── Notificaciones ────────────────────────────────────────────────────────

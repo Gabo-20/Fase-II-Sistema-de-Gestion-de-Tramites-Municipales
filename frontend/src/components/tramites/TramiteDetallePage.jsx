@@ -4,18 +4,20 @@ import { tramitesService } from '../../services/tramitesService'
 import { useAuth } from '../../context/AuthContext'
 import EstadoBadge from '../ui/EstadoBadge'
 import Spinner from '../ui/Spinner'
-import { ArrowLeft, Clock, User, FileText } from 'lucide-react'
+import { ArrowLeft, Clock, User, FileText, CreditCard } from 'lucide-react'
 
 const INPUT = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500'
 
-export default function TramiteDetallePage({ backPath, backLabel = 'Volver al listado' }) {
+export default function TramiteDetallePage({ backPath, backLabel = 'Volver al listado', esMulta = false }) {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const [solicitud, setSolicitud] = useState(null)
   const [loading, setLoading] = useState(true)
   const [resolucion, setResolucion] = useState({ accion: '', comentario: '' })
   const [saving, setSaving] = useState(false)
+  const [pagando, setPagando] = useState(false)
+  const [errorPago, setErrorPago] = useState('')
 
   useEffect(() => {
     tramitesService.getSolicitudById(id)
@@ -47,6 +49,26 @@ export default function TramiteDetallePage({ backPath, backLabel = 'Volver al li
   const puedeResolver =
     hasRole('OPERADOR', 'SUPERVISOR', 'ADMIN') &&
     ['RECIBIDA', 'EN_REVISION', 'SUBSANACION'].includes(solicitud.estado)
+
+  const puedePagar =
+    esMulta &&
+    hasRole('CIUDADANO') &&
+    solicitud.estado === 'RECIBIDA' &&
+    solicitud.ciudadanoId === user?.id
+
+  const handlePago = async () => {
+    setErrorPago('')
+    setPagando(true)
+    try {
+      await tramitesService.registrarPago(id)
+      const { data } = await tramitesService.getSolicitudById(id)
+      setSolicitud(data)
+    } catch (err) {
+      setErrorPago(err.response?.data?.error ?? 'No se pudo registrar el pago')
+    } finally {
+      setPagando(false)
+    }
+  }
 
   return (
     <div className="animate-fade-in-up space-y-5">
@@ -122,6 +144,32 @@ export default function TramiteDetallePage({ backPath, backLabel = 'Volver al li
                   </li>
                 ))}
               </ol>
+            </div>
+          )}
+
+          {puedePagar && (
+            <div className="space-y-3 border-t border-gray-100 pt-5 dark:border-gray-800">
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                <CreditCard size={14} /> Pago de multa
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Al confirmar, se notificará al funcionario para que verifique el pago recibido.
+              </p>
+              {errorPago && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                  {errorPago}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={handlePago}
+                disabled={pagando}
+                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {pagando
+                  ? <><Spinner size="sm" className="text-white" /><span>Registrando...</span></>
+                  : <><CreditCard size={15} /><span>Registrar pago</span></>}
+              </button>
             </div>
           )}
 
