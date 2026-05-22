@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
+import { useBadges } from '../../context/BadgeContext'
 import { Link } from 'react-router-dom'
 import { dashboardService } from '../../services/dashboardService'
 import Spinner from '../../components/ui/Spinner'
@@ -56,9 +57,15 @@ function ChartTooltip({ active, payload, label }) {
 }
 
 // ── Tarjeta contadora ──────────────────────────────────────────────────────────
-function StatCard({ label, value, Icon, iconCls, borderCls, loading }) {
+function StatCard({ label, value, Icon, iconCls, borderCls, loading, pulse = false }) {
   return (
-    <div className={`rounded-xl border bg-white p-5 dark:bg-gray-900 ${borderCls}`}>
+    <div className={`relative rounded-xl border bg-white p-5 dark:bg-gray-900 ${borderCls}`}>
+      {pulse && !loading && value > 0 && (
+        <span className="absolute right-3 top-3 flex h-2.5 w-2.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+        </span>
+      )}
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
@@ -77,7 +84,9 @@ function StatCard({ label, value, Icon, iconCls, borderCls, loading }) {
 
 // ── Vista ciudadano ────────────────────────────────────────────────────────────
 function CiudadanoDashboard({ user, hasRole }) {
+  const { badges } = useBadges()
   const cards = CARDS.filter((c) => hasRole(...c.roles))
+
   return (
     <div className="animate-fade-in-up space-y-6">
       <div>
@@ -90,24 +99,33 @@ function CiudadanoDashboard({ user, hasRole }) {
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {cards.map(({ href, title, desc, Icon, accent, iconBg }, i) => (
-          <Link
-            key={href}
-            to={href}
-            style={{ animationDelay: `${i * 55}ms` }}
-            className={`group flex flex-col rounded-xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 ${accent}`}
-          >
-            <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}>
-              <Icon size={20} />
-            </div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
-            <p className="mt-1 flex-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">{desc}</p>
-            <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-              <span>Ir al módulo</span>
-              <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
-            </div>
-          </Link>
-        ))}
+        {cards.map(({ href, title, desc, Icon, accent, iconBg }, i) => {
+          const isMultas = href === '/multas'
+          const multaCount = isMultas ? (badges.multas ?? 0) : 0
+          return (
+            <Link
+              key={href}
+              to={href}
+              style={{ animationDelay: `${i * 55}ms` }}
+              className={`group relative flex flex-col rounded-xl border bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-900 ${accent}`}
+            >
+              {multaCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white shadow-md ring-2 ring-white dark:ring-gray-900">
+                  {multaCount > 99 ? '99+' : multaCount}
+                </span>
+              )}
+              <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}>
+                <Icon size={20} />
+              </div>
+              <h2 className="font-semibold text-gray-900 dark:text-white">{title}</h2>
+              <p className="mt-1 flex-1 text-sm leading-relaxed text-gray-500 dark:text-gray-400">{desc}</p>
+              <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                <span>Ir al módulo</span>
+                <ChevronRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </Link>
+          )
+        })}
       </div>
     </div>
   )
@@ -164,7 +182,7 @@ function StaffDashboard({ user }) {
         <StatCard label="Total solicitudes" value={stats?.totalSolicitudes} Icon={ClipboardList} iconCls="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"   borderCls="border-blue-200 dark:border-blue-900/50"   loading={loading} />
         <StatCard label="Usuarios"          value={stats?.totalUsuarios}    Icon={Users}          iconCls="bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400" borderCls="border-purple-200 dark:border-purple-900/50" loading={loading} />
         <StatCard label="Aprobadas"         value={aprobadas}               Icon={CheckCircle2}   iconCls="bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400" borderCls="border-emerald-200 dark:border-emerald-900/50" loading={loading} />
-        <StatCard label="Pendientes"        value={pendientes}              Icon={Clock}          iconCls="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"   borderCls="border-amber-200 dark:border-amber-900/50"   loading={loading} />
+        <StatCard label="Pendientes"        value={pendientes}              Icon={Clock}          iconCls="bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"   borderCls="border-amber-200 dark:border-amber-900/50"   loading={loading} pulse />
       </div>
 
       {/* Gráficas */}
