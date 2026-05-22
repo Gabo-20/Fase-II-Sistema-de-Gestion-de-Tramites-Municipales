@@ -7,7 +7,9 @@ export const reportesService = {
   getHistorial:    (ciudadanoId) => api.get(`/reportes/historial/${ciudadanoId}`),
   getTiposTramite: () => api.get('/tipos-tramite'),
   exportUrl:       (params) => {
-    const qs = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v))).toString()
+    const token = localStorage.getItem('token')
+    const all = { ...params, token }
+    const qs = new URLSearchParams(Object.fromEntries(Object.entries(all).filter(([, v]) => v))).toString()
     return `${BASE}/reportes/solicitudes/export${qs ? `?${qs}` : ''}`
   },
 }

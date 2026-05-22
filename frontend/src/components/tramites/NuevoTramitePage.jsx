@@ -6,11 +6,13 @@ import Spinner from '../ui/Spinner'
 import { AlertCircle, ArrowLeft } from 'lucide-react'
 
 const INPUT = 'w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500'
+const norm = s => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
-export default function NuevoTramitePage({ titulo, keywords, backPath, detallePath }) {
+export default function NuevoTramitePage({ titulo, keywords, backPath, detallePath, refLabel, refPlaceholder, refRequired = false }) {
   const navigate = useNavigate()
   const [tipos, setTipos] = useState([])
   const [tipoTramiteId, setTipoTramiteId] = useState('')
+  const [referencia, setReferencia] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingTipos, setLoadingTipos] = useState(true)
@@ -19,9 +21,10 @@ export default function NuevoTramitePage({ titulo, keywords, backPath, detallePa
     api.get('/tipos-tramite')
       .then(({ data }) => {
         const filtrados = data.filter(t =>
-          keywords.some(k => t.nombre?.toLowerCase().includes(k.toLowerCase()))
+          keywords.some(k => norm(t.nombre).includes(norm(k)))
         )
-        setTipos(filtrados)
+        const unicos = Array.from(new Map(filtrados.map(t => [norm(t.nombre), t])).values())
+        setTipos(unicos)
         if (filtrados.length === 1) setTipoTramiteId(String(filtrados[0].id))
       })
       .catch(() => setError('No se pudieron cargar los tipos de trámite'))
@@ -33,7 +36,10 @@ export default function NuevoTramitePage({ titulo, keywords, backPath, detallePa
     setError('')
     setLoading(true)
     try {
-      const { data } = await tramitesService.crearLicencia({ tipoTramiteId: Number(tipoTramiteId) })
+      const { data } = await tramitesService.crearLicencia({
+        tipoTramiteId: Number(tipoTramiteId),
+        ...(referencia ? { referencia } : {}),
+      })
       navigate(`${detallePath}/${data.solicitud.id}`)
     } catch (err) {
       setError(err.response?.data?.error ?? err.response?.data?.mensaje ?? 'Error al crear la solicitud')
@@ -79,6 +85,22 @@ export default function NuevoTramitePage({ titulo, keywords, backPath, detallePa
                 </select>
               )}
             </div>
+
+            {refLabel && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {refLabel}
+                </label>
+                <input
+                  type="text"
+                  value={referencia}
+                  onChange={e => setReferencia(e.target.value)}
+                  required={refRequired}
+                  placeholder={refPlaceholder ?? ''}
+                  className={INPUT}
+                />
+              </div>
+            )}
 
             {error && (
               <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">

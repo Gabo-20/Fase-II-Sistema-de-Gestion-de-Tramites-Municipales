@@ -6,6 +6,7 @@ const {
   resolverSolicitud,
   agregarObservacion,
   renovarLicencia,
+  crearMultaParaCiudadano,
 } = require('../controllers/tramiteController');
 const { verificarToken, soloRoles } = require('../middlewares/auth');
 
@@ -22,6 +23,7 @@ router.get('/',                                                         listarSo
 router.get('/:id',                                                      obtenerSolicitud);
 
 // Operador+
+router.post('/multa-ciudadano', soloRoles('OPERADOR','SUPERVISOR','ADMIN'), crearMultaParaCiudadano);
 router.patch('/:id/resolucion', soloRoles('OPERADOR','SUPERVISOR','ADMIN'), resolverSolicitud);
 router.post('/:id/observaciones', soloRoles('OPERADOR','SUPERVISOR','ADMIN'), agregarObservacion);
 

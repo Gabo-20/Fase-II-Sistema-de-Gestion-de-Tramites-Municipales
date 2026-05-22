@@ -7,6 +7,9 @@ export default function NuevaResidenciaPage() {
       keywords={['residencia']}
       backPath="/residencia"
       detallePath="/residencia"
+      refLabel="Dirección exacta de residencia"
+      refPlaceholder="Zona, colonia, calle, número de casa..."
+      refRequired
     />
   )
 }

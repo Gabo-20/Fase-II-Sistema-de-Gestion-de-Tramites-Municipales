@@ -200,6 +200,50 @@ async function renovarLicencia({ solicitudId, ciudadanoId }) {
   return nueva;
 }
 
+// OPERADOR+ asigna una multa a un ciudadano buscándolo por DPI
+async function crearMultaParaCiudadano({ funcionarioId, ciudadanoDpi, referencia }) {
+  if (!ciudadanoDpi?.trim()) {
+    throw Object.assign(new Error('DPI del ciudadano es requerido'), { status: 400 });
+  }
+
+  const ciudadano = await prisma.usuario.findUnique({ where: { dpi: ciudadanoDpi.trim() } });
+  if (!ciudadano || ciudadano.rol !== 'CIUDADANO') {
+    throw Object.assign(new Error('Ciudadano no encontrado con ese DPI'), { status: 404 });
+  }
+
+  const tipo = await prisma.tipoTramite.findFirst({
+    where: { nombre: { contains: 'Multa' }, activo: true },
+  });
+  if (!tipo) {
+    throw Object.assign(new Error('Tipo de trámite Multa no encontrado'), { status: 404 });
+  }
+
+  const solicitud = await prisma.solicitud.create({
+    data: {
+      numeroExpediente: generarExpediente(),
+      ciudadanoId: ciudadano.id,
+      tipoTramiteId: tipo.id,
+      funcionarioId,
+      referencia: referencia ?? null,
+      estado: 'RECIBIDA',
+    },
+    include: {
+      tipoTramite: { select: { id: true, nombre: true } },
+      ciudadano: { select: { id: true, nombre: true, correo: true, dpi: true } },
+    },
+  });
+
+  await prisma.historialEstado.create({
+    data: {
+      solicitudId: solicitud.id,
+      estado: 'RECIBIDA',
+      comentario: `Multa registrada por funcionario`,
+    },
+  });
+
+  return solicitud;
+}
+
 module.exports = {
   crearSolicitud,
   listarSolicitudesCiudadano,
@@ -208,4 +252,5 @@ module.exports = {
   resolverSolicitud,
   agregarObservacion,
   renovarLicencia,
+  crearMultaParaCiudadano,
 };
