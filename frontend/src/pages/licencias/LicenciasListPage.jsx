@@ -12,21 +12,24 @@ const LABEL_ESTADO = { '': 'Todos', RECIBIDA: 'Recibida', EN_REVISION: 'En revis
 const SELECT = 'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
 
 export default function LicenciasListPage() {
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
   const esFuncionario = hasRole('OPERADOR', 'SUPERVISOR', 'ADMIN')
   const [todas, setTodas] = useState([])
-  const [filtroEstado, setFiltroEstado] = useState('')
+  const defaultFiltro = user?.rol === 'OPERADOR' ? 'RECIBIDA'
+                      : user?.rol === 'SUPERVISOR' ? 'EN_REVISION'
+                      : ''
+  const [filtroEstado, setFiltroEstado] = useState(defaultFiltro)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const KEYWORDS = ['licencia comercial', 'comercial', 'renovacion de licencia', 'licencia nueva']
+  const norm = s => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
   useEffect(() => {
     tramitesService.getMisSolicitudes()
       .then(({ data }) => {
-        const lista = (data.solicitudes ?? data).filter(
-          s => !s.tipoTramite?.nombre?.toLowerCase().includes('construcción') &&
-               !s.tipoTramite?.nombre?.toLowerCase().includes('obra') &&
-               !s.tipoTramite?.nombre?.toLowerCase().includes('ampliación') &&
-               !s.tipoTramite?.nombre?.toLowerCase().includes('remodelación')
+        const lista = (data.solicitudes ?? data).filter(s =>
+          KEYWORDS.some(k => norm(s.tipoTramite?.nombre).includes(norm(k)))
         )
         setTodas(lista)
       })

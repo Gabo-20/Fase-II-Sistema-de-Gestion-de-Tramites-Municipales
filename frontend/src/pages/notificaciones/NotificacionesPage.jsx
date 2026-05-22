@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react'
 import { tramitesService } from '../../services/tramitesService'
+import { useBadges } from '../../context/BadgeContext'
 import EstadoBadge from '../../components/ui/EstadoBadge'
 import Spinner from '../../components/ui/Spinner'
 import { Bell, AlertCircle } from 'lucide-react'
 
 export default function NotificacionesPage() {
+  const { refetch: refetchBadges } = useBadges()
   const [notificaciones, setNotificaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    localStorage.setItem('notif_seen_at', new Date().toISOString())
+    refetchBadges()
+
     tramitesService.getNotificaciones()
       .then(({ data }) => setNotificaciones(data))
       .catch(() => setError('No se pudieron cargar las notificaciones'))
       .finally(() => setLoading(false))
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) {
     return (

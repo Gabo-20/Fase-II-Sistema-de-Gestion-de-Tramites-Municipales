@@ -11,7 +11,8 @@ const LABEL_ESTADO = { '': 'Todos', RECIBIDA: 'Recibida', EN_REVISION: 'En revis
 
 const SELECT = 'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
 
-const PALABRAS_CONSTRUCCION = ['construcción', 'obra', 'ampliación', 'remodelación']
+const PALABRAS_CONSTRUCCION = ['construccion', 'obra', 'ampliacion', 'remodelacion', 'permiso de construccion']
+const norm = s => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 export default function ConstruccionListPage() {
   const { hasRole } = useAuth()
@@ -25,7 +26,7 @@ export default function ConstruccionListPage() {
     tramitesService.getMisSolicitudes()
       .then(({ data }) => {
         const lista = (data.solicitudes ?? data).filter(s =>
-          PALABRAS_CONSTRUCCION.some(p => s.tipoTramite?.nombre?.toLowerCase().includes(p))
+          PALABRAS_CONSTRUCCION.some(p => norm(s.tipoTramite?.nombre).includes(p))
         )
         setTodas(lista)
       })

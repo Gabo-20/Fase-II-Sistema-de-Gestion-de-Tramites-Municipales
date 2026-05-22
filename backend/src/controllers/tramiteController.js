@@ -75,6 +75,18 @@ async function renovarLicencia(req, res) {
   }
 }
 
+async function registrarPagoMulta(req, res) {
+  try {
+    const solicitud = await tramiteService.registrarPagoMulta({
+      id: req.params.id,
+      ciudadanoId: req.usuario.id,
+    });
+    res.json({ message: 'Pago registrado. Pendiente de confirmación.', solicitud });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+}
+
 async function crearMultaParaCiudadano(req, res) {
   try {
     const solicitud = await tramiteService.crearMultaParaCiudadano({
@@ -96,4 +108,5 @@ module.exports = {
   agregarObservacion,
   renovarLicencia,
   crearMultaParaCiudadano,
+  registrarPagoMulta,
 };
