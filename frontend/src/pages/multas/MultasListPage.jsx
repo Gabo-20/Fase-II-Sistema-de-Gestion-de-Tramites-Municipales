@@ -8,7 +8,7 @@ export default function MultasListPage() {
     <ModuloListPage
       titulo="Pago de Multas"
       keywords={KEYWORDS}
-      nuevoPath="/multas/nuevo"
+
       nuevoPathAdmin="/multas/nueva-admin"
       labelAdmin="Registrar multa"
       detallePath="/multas"
