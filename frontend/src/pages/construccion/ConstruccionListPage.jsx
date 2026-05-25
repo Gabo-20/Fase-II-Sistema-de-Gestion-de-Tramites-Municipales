@@ -4,68 +4,74 @@ import { tramitesService } from '../../services/tramitesService'
 import { useAuth } from '../../context/AuthContext'
 import EstadoBadge from '../../components/ui/EstadoBadge'
 import Spinner from '../../components/ui/Spinner'
-import { Building2, Plus, ArrowRight } from 'lucide-react'
+import { Building2, Plus, AlertCircle, ArrowRight } from 'lucide-react'
+
+const ESTADOS = ['', 'RECIBIDA', 'EN_REVISION', 'APROBADA', 'RECHAZADA', 'SUBSANACION']
+const LABEL_ESTADO = { '': 'Todos', RECIBIDA: 'Recibida', EN_REVISION: 'En revisión', APROBADA: 'Aprobada', RECHAZADA: 'Rechazada', SUBSANACION: 'Subsanación' }
+
+const SELECT = 'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-white'
+
+const PALABRAS_CONSTRUCCION = ['construccion', 'obra', 'ampliacion', 'remodelacion', 'permiso de construccion']
+const norm = s => (s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 export default function ConstruccionListPage() {
   const { hasRole } = useAuth()
-  const [solicitudes, setSolicitudes] = useState([])
+  const esFuncionario = hasRole('OPERADOR', 'SUPERVISOR', 'ADMIN')
+  const [todas, setTodas] = useState([])
+  const [filtroEstado, setFiltroEstado] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const { data } = hasRole('OPERADOR', 'SUPERVISOR', 'ADMIN')
-          ? await tramitesService.getSolicitudesPendientes()
-          : await tramitesService.getMisSolicitudes()
-        const todas = data.solicitudes ?? data
-        setSolicitudes(todas.filter(s => s.tipoTramite?.nombre?.toLowerCase().includes('construcción')))
-      } catch {
-        setError('No se pudieron cargar los permisos')
-      } finally {
-        setLoading(false)
-      }
-    }
-    load()
-  }, [hasRole])
+    tramitesService.getMisSolicitudes()
+      .then(({ data }) => {
+        const lista = (data.solicitudes ?? data).filter(s =>
+          PALABRAS_CONSTRUCCION.some(p => norm(s.tipoTramite?.nombre).includes(p))
+        )
+        setTodas(lista)
+      })
+      .catch(() => setError('No se pudieron cargar los permisos'))
+      .finally(() => setLoading(false))
+  }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <Spinner size="lg" className="text-emerald-600 dark:text-emerald-400" />
-      </div>
-    )
-  }
+  const solicitudes = filtroEstado ? todas.filter(s => s.estado === filtroEstado) : todas
+
+  if (loading) return <div className="flex flex-1 items-center justify-center py-24"><Spinner size="lg" className="text-emerald-600 dark:text-emerald-400" /></div>
+
+  if (error) return (
+    <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />{error}
+    </div>
+  )
 
   return (
     <div className="animate-fade-in-up space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Permisos de Construcción</h1>
           <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-            {solicitudes.length} permiso{solicitudes.length !== 1 ? 's' : ''} registrado{solicitudes.length !== 1 ? 's' : ''}
+            {solicitudes.length} permiso{solicitudes.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {hasRole('CIUDADANO', 'ADMIN') && (
-          <Link
-            to="/construccion/nuevo"
-            className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 dark:hover:bg-emerald-500"
-          >
-            <Plus size={16} />
-            Nuevo permiso
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <select value={filtroEstado} onChange={e => setFiltroEstado(e.target.value)} className={SELECT}>
+            {ESTADOS.map(e => <option key={e} value={e}>{LABEL_ESTADO[e]}</option>)}
+          </select>
+          {hasRole('CIUDADANO') && (
+            <Link
+              to="/construccion/nuevo"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+            >
+              <Plus size={16} /> Nuevo permiso
+            </Link>
+          )}
+        </div>
       </div>
-
-      {error && (
-        <p className="text-sm text-red-500 dark:text-red-400">{error}</p>
-      )}
 
       {solicitudes.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 py-14 dark:border-gray-700">
           <Building2 className="mb-3 h-10 w-10 text-gray-300 dark:text-gray-600" />
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No hay permisos registrados</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Comienza creando un nuevo permiso de construcción</p>
+          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No hay permisos</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
@@ -74,6 +80,7 @@ export default function ConstruccionListPage() {
               <tr>
                 <th className="px-4 py-3">Expediente</th>
                 <th className="px-4 py-3">Tipo</th>
+                {esFuncionario && <th className="px-4 py-3">Ciudadano</th>}
                 <th className="hidden px-4 py-3 sm:table-cell">Fecha</th>
                 <th className="px-4 py-3">Estado</th>
                 <th className="px-4 py-3"></th>
@@ -81,22 +88,21 @@ export default function ConstruccionListPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {solicitudes.map((s, i) => (
-                <tr
-                  key={s.id}
-                  className="animate-fade-in hover:bg-gray-50/70 dark:hover:bg-gray-800/40"
-                  style={{ animationDelay: `${i * 40}ms` }}
-                >
+                <tr key={s.id} className="animate-fade-in hover:bg-gray-50/70 dark:hover:bg-gray-800/40" style={{ animationDelay: `${i * 40}ms` }}>
                   <td className="px-4 py-3 font-mono text-xs font-medium text-gray-700 dark:text-gray-300">{s.numeroExpediente}</td>
                   <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{s.tipoTramite?.nombre}</td>
+                  {esFuncionario && (
+                    <td className="px-4 py-3">
+                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">{s.ciudadano?.nombre}</p>
+                      <p className="text-xs text-gray-400">{s.ciudadano?.correo}</p>
+                    </td>
+                  )}
                   <td className="hidden px-4 py-3 text-gray-500 dark:text-gray-500 sm:table-cell">
                     {new Date(s.fechaSolicitud).toLocaleDateString('es-GT')}
                   </td>
                   <td className="px-4 py-3"><EstadoBadge estado={s.estado} /></td>
                   <td className="px-4 py-3">
-                    <Link
-                      to={`/construccion/${s.id}`}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
+                    <Link to={`/construccion/${s.id}`} className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400">
                       Ver <ArrowRight size={12} />
                     </Link>
                   </td>

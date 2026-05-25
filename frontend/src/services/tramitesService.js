@@ -17,7 +17,12 @@ export const tramitesService = {
   getEstadoPermiso: (id) => api.get(`/tramites/${id}`),
   agregarObservacion: (id, data) => api.post(`/tramites/${id}/observaciones`, data),
 
-  getSolicitudesPendientes: () => api.get('/tramites/pendientes'),
+  registrarPago: (id) => api.post(`/tramites/${id}/pago`),
+
+  getSolicitudesPendientes: () => api.get('/tramites/'),
+
+  // ── Notificaciones ────────────────────────────────────────────────────────
+  getNotificaciones: () => api.get('/notificaciones'),
 
   // ── Pendiente Sprint 3 ────────────────────────────────────────────────────
   actualizarPropietario: (id, data) => api.put(`/tramites/catastro/${id}/propietario`, data),

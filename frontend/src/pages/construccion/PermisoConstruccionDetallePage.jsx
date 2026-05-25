@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { tramitesService } from '../../services/tramitesService'
 import { useAuth } from '../../context/AuthContext'
+import { useBadges } from '../../context/BadgeContext'
 import EstadoBadge from '../../components/ui/EstadoBadge'
 import Spinner from '../../components/ui/Spinner'
 import { ArrowLeft, Clock, Building2 } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function PermisoConstruccionDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { hasRole } = useAuth()
+  const { refetch: refetchBadges } = useBadges()
   const [permiso, setPermiso] = useState(null)
   const [loading, setLoading] = useState(true)
   const [obs, setObs] = useState('')
@@ -32,6 +34,7 @@ export default function PermisoConstruccionDetallePage() {
       const { data } = await tramitesService.getEstadoPermiso(id)
       setPermiso(data)
       setObs('')
+      refetchBadges()
     } finally {
       setSaving(false)
     }

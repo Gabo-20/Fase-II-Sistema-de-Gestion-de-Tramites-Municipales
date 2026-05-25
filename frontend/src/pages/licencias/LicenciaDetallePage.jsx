@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { tramitesService } from '../../services/tramitesService'
 import { useAuth } from '../../context/AuthContext'
+import { useBadges } from '../../context/BadgeContext'
 import EstadoBadge from '../../components/ui/EstadoBadge'
 import Spinner from '../../components/ui/Spinner'
 import { ArrowLeft, Clock, User, FileText } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function LicenciaDetallePage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { hasRole } = useAuth()
+  const { refetch: refetchBadges } = useBadges()
   const [solicitud, setSolicitud] = useState(null)
   const [loading, setLoading] = useState(true)
   const [resolucion, setResolucion] = useState({ accion: '', comentario: '' })
@@ -32,6 +34,7 @@ export default function LicenciaDetallePage() {
       const { data } = await tramitesService.getSolicitudById(id)
       setSolicitud(data)
       setResolucion({ accion: '', comentario: '' })
+      refetchBadges()
     } finally {
       setSaving(false)
     }
@@ -136,7 +139,8 @@ export default function LicenciaDetallePage() {
                 value={resolucion.comentario}
                 onChange={(e) => setResolucion({ ...resolucion, comentario: e.target.value })}
                 rows={2}
-                placeholder="Comentario (opcional)"
+                required
+                  placeholder="Comentario requerido..."
                 className={INPUT}
               />
               <button

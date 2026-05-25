@@ -43,6 +43,7 @@ model Solicitud {
   ciudadanoId      String
   tipoTramiteId    Int
   funcionarioId    String?
+  referencia       String?         @db.VarChar(255)
   estado           EstadoSolicitud @default(RECIBIDA)
   fechaSolicitud   DateTime        @default(now())
   fechaResolucion  DateTime?
@@ -79,6 +80,36 @@ model Documento {
   solicitud   Solicitud @relation(fields: [solicitudId], references: [id])
 
   @@map("documentos")
+}
+
+model Inmueble {
+  id               Int       @id @default(autoincrement())
+  numeroCatastral  String    @unique @db.VarChar(20)
+  direccion        String    @db.VarChar(255)
+  propietario      String    @db.VarChar(150)
+  area             Decimal   @db.Decimal(10, 2)
+  valorCatastral   Decimal   @db.Decimal(14, 2)
+  activo           Boolean   @default(true)
+  creadoEn         DateTime  @default(now())
+  actualizadoEn    DateTime  @updatedAt
+
+  historial  HistorialCatastro[]
+
+  @@map("inmuebles")
+}
+
+model HistorialCatastro {
+  id               Int      @id @default(autoincrement())
+  inmuebleId       Int
+  propietarioAnterior String @db.VarChar(150)
+  propietarioNuevo    String @db.VarChar(150)
+  funcionarioId    String
+  motivo           String?  @db.Text
+  creadoEn         DateTime @default(now())
+
+  inmueble   Inmueble @relation(fields: [inmuebleId], references: [id])
+
+  @@map("historial_catastro")
 }
 
 // ─── Enums ───────────────────────────────────────────────────────────────────

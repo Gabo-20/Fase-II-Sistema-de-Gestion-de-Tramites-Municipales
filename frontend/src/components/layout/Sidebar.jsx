@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useBadges } from '../../context/BadgeContext'
 import {
   LayoutDashboard,
   FileText,
@@ -8,18 +9,56 @@ import {
   Bell,
   X,
   Landmark,
+  Users,
+  Receipt,
+  BadgeCheck,
+  AlertTriangle,
+  Home,
+  Tag,
+  CalendarClock,
+  BarChart2,
+  History,
 } from 'lucide-react'
 
+// badge(badges, rol) → número a mostrar, o 0 para no mostrar
 const NAV = [
-  { to: '/dashboard', label: 'Inicio', Icon: LayoutDashboard, roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
-  { to: '/licencias', label: 'Licencias', Icon: FileText, roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
-  { to: '/construccion', label: 'Construcción', Icon: Building2, roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
-  { to: '/catastro', label: 'Catastro', Icon: Map, roles: ['OPERADOR', 'SUPERVISOR', 'ADMIN'] },
-  { to: '/notificaciones', label: 'Notificaciones', Icon: Bell, roles: ['CIUDADANO', 'OPERADOR', 'SUPERVISOR', 'ADMIN'] },
+  { to: '/dashboard',            label: 'Inicio',          Icon: LayoutDashboard, roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'] },
+  { to: '/licencias',            label: 'Licencias',       Icon: FileText,        roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.licencias ?? 0) : 0 },
+  { to: '/construccion',         label: 'Construcción',    Icon: Building2,       roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.construccion ?? 0) : 0 },
+  { to: '/impuestos',            label: 'Pago IUSI',       Icon: Receipt,         roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.iusi ?? 0) : 0 },
+  { to: '/solvencia',            label: 'Solvencia',       Icon: BadgeCheck,      roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.solvencia ?? 0) : 0 },
+  { to: '/multas',               label: 'Multas',          Icon: AlertTriangle,   roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol === 'CIUDADANO' ? (b.multas ?? 0) : (b.porModulo?.multas ?? 0) },
+  { to: '/residencia',           label: 'Residencia',      Icon: Home,            roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.residencia ?? 0) : 0 },
+  { to: '/rotulo',               label: 'Rótulos',         Icon: Tag,             roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.rotulo ?? 0) : 0 },
+  { to: '/licencias-temporales', label: 'Lic. Temporales', Icon: CalendarClock,   roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol !== 'CIUDADANO' ? (b.porModulo?.temporales ?? 0) : 0 },
+  { to: '/catastro',             label: 'Catastro',        Icon: Map,             roles: ['OPERADOR','SUPERVISOR','ADMIN'] },
+  { to: '/reportes',             label: 'Reportes',        Icon: BarChart2,       roles: ['OPERADOR','SUPERVISOR','ADMIN'] },
+  { to: '/historial',            label: 'Mis solicitudes', Icon: History,         roles: ['CIUDADANO'] },
+  { to: '/notificaciones',       label: 'Notificaciones',  Icon: Bell,            roles: ['CIUDADANO','OPERADOR','SUPERVISOR','ADMIN'],
+    badge: (b, rol) => rol === 'CIUDADANO' ? (b.notificaciones ?? 0) : 0 },
+  { to: '/admin/usuarios',       label: 'Usuarios',        Icon: Users,           roles: ['ADMIN'] },
 ]
 
+function BadgeDot({ count }) {
+  if (!count) return null
+  return (
+    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  )
+}
+
 export default function Sidebar({ open, onClose }) {
-  const { hasRole } = useAuth()
+  const { hasRole, user } = useAuth()
+  const { badges } = useBadges()
 
   return (
     <aside
@@ -51,29 +90,33 @@ export default function Sidebar({ open, onClose }) {
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
-          {NAV.filter((n) => hasRole(...n.roles)).map(({ to, label, Icon }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  [
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
-                    isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
-                  ].join(' ')
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon size={17} className={isActive ? 'text-blue-600 dark:text-blue-400' : ''} />
-                    {label}
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
+          {NAV.filter((n) => hasRole(...n.roles)).map(({ to, label, Icon, badge }) => {
+            const count = badge ? badge(badges, user?.rol) : 0
+            return (
+              <li key={to}>
+                <NavLink
+                  to={to}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    [
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
+                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
+                    ].join(' ')
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon size={17} className={isActive ? 'text-blue-600 dark:text-blue-400' : ''} />
+                      <span className="flex-1">{label}</span>
+                      <BadgeDot count={count} />
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            )
+          })}
         </ul>
       </nav>
     </aside>
